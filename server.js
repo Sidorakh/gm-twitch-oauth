@@ -22,7 +22,8 @@ app.get('/login',(req,res)=>{
   sessions[session_id] = {
     expiry: setTimeout(()=>{
       delete sessions[session_id];
-    },1000*240)// 4 min timeout
+    },1000*240),  // 4 min timeout
+    status:'processing'
   };
   res.json({
     token:session_id,
@@ -38,7 +39,7 @@ app.get('/callback',async (req,res)=>{
   if (result.status == 200) {
     sessions[req.query.state] = {status:'success',data:result.data};
   } else {
-    sessions[req.query.state] = {status:'error',data:result.data};
+    sessions[req.query.state] = {status:'error',data:result.data,reason:'oauth error'};
   }
   res.json(result.data)
 })
@@ -46,14 +47,16 @@ app.get('/callback',async (req,res)=>{
 app.get('/poll/:id',(req,res)=>{
   if (sessions[req.params.id]) {
     const user_data = sessions[req.params.id];
+    console.log(user_data);
     if (user_data.status == 'processing') {
       return res.json({status:'processing'});
     } else {
       delete sessions[req.params.id];
       return res.json(user_data);
     }
+  } else {
+    res.json({status:'error',reason:`not found`});
   }
-  
   
 })
 
