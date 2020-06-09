@@ -61,6 +61,10 @@ app.get('/poll/:id',(req,res)=>{
   
 })
 
+app.post('/refresh',async (req,res)=>{
+  const refresh_token = req.body.refresh_token;
+  const result = await axios.post('https://id.twitch.tv/oauth2/token?grant_type=refresh_token&client_id=${process.env.CLIENT_ID}')
+});
 
 
 app.listen(process.env.PORT,()=>{console.log(`Live on port ${process.env.PORT}`)});
