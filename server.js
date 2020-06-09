@@ -34,7 +34,7 @@ app.get('/login',(req,res)=>{
 
 app.get('/callback',async (req,res)=>{
   const result = await axios.post(  `https://id.twitch.tv/oauth2/token?client_id=${process.env.CLIENT_ID}`
-                                  + `&client_secret=${process.env.SECRET_ID}&code=${req.query.code}&grant_type=authorization_code&redirect_uri=${REDIRECT_URI}`,
+                                  + `&client_secret=${process.env.CLIENT_SECRET}&code=${req.query.code}&grant_type=authorization_code&redirect_uri=${REDIRECT_URI}`,
 {},{validateStatus:false});
   clearTimeout(sessions[req.query.state].expiry);
   if (result.status == 200) {
@@ -63,7 +63,13 @@ app.get('/poll/:id',(req,res)=>{
 
 app.post('/refresh',async (req,res)=>{
   const refresh_token = req.body.refresh_token;
-  const result = await axios.post('https://id.twitch.tv/oauth2/token?grant_type=refresh_token&client_id=${process.env.CLIENT_ID}')
+  try {
+    const result = await axios.post(`https://id.twitch.tv/oauth2/token?grant_type=refresh_token&client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}`);
+    return res.json({status:'success',data:result.data});
+  } catch(e) {
+    return res.json({status:'error',reason:e.toString()})
+  }
+  
 });
 
 
