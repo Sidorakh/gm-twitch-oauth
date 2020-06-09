@@ -27,6 +27,7 @@ app.get('/login',(req,res)=>{
   };
   res.json({
     token:session_id,
+    client_id:'8frcw33ljvyab3t32ep2mwr7bc2bb0',
     url:`https://id.twitch.tv/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=https://gm-twitch-oauth.glitch.me/callback&response_type=code&scope=user:read:email&state=${session_id}`
   });
 });
