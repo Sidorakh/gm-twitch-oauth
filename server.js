@@ -33,17 +33,19 @@ app.get('/login',(req,res)=>{
 });
 
 app.get('/callback',async (req,res)=>{
-  const result = await axios.post(  `https://id.twitch.tv/oauth2/token?client_id=${process.env.CLIENT_ID}`
-                                  + `&client_secret=${process.env.CLIENT_SECRET}&code=${req.query.code}&grant_type=authorization_code&redirect_uri=${REDIRECT_URI}`,
-{},{validateStatus:false});
-  clearTimeout(sessions[req.query.state].expiry);
-  if (result.status == 200) {
-    sessions[req.query.state] = {status:'success',data:result.data};
-  } else {
-    sessions[req.query.state] = {status:'error',data:result.data,reason:'oauth error'};
+  if (sessions[req.query.state]) {
+    const result = await axios.post(  `https://id.twitch.tv/oauth2/token?client_id=${process.env.CLIENT_ID}`
+                                    + `&client_secret=${process.env.CLIENT_SECRET}&code=${req.query.code}&grant_type=authorization_code&redirect_uri=${REDIRECT_URI}`,
+                                      {},{validateStatus:false});
+    clearTimeout(sessions[req.query.state].expiry);
+    if (result.status == 200) {
+      sessions[req.query.state] = {status:'success',data:result.data};
+    } else {
+      sessions[req.query.state] = {status:'error',data:result.data,reason:'oauth error'};
+    }
+    res.json(result.data);
   }
-  res.json(result.data)
-})
+});
 
 app.get('/poll/:id',(req,res)=>{
   if (sessions[req.params.id]) {
