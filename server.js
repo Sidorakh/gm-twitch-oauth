@@ -22,7 +22,7 @@ app.get('/login',(req,res)=>{
   sessions[session_id] = {
     expiry: setTimeout(()=>{
       delete sessions[session_id];
-    },1000*120)// 2 min timeout
+    },1000*240)// 4 min timeout
   };
   res.json({
     token:session_id,
@@ -34,8 +34,29 @@ app.get('/callback',async (req,res)=>{
   const result = await axios.post(  `https://id.twitch.tv/oauth2/token?client_id=${process.env.CLIENT_ID}`
                                   + `&client_secret=${process.env.SECRET_ID}&code=${req.query.code}&grant_type=authorization_code&redirect_uri=${REDIRECT_URI}`,
 {},{validateStatus:false});
+  clearTimeout(sessions[req.query.state].expiry);
+  if (result.status == 200) {
+    sessions[req.query.state] = {status:'success',data:result.data};
+  } else {
+    sessions[req.query.state] = {status:'error',data:result.data};
+  }
   res.json(result.data)
 })
+
+app.get('/poll/:id',(req,res)=>{
+  if (sessions[req.params.id]) {
+    const user_data = sessions[req.params.id];
+    if (user_data.status == 'processing') {
+      return res.json({status:'processing'});
+    } else {
+      delete sessions[req.params.id];
+      return res.json(user_data);
+    }
+  }
+  
+  
+})
+
 
 
 app.listen(process.env.PORT,()=>{console.log(`Live on port ${process.env.PORT}`)});
